@@ -1,72 +1,70 @@
 import streamlit as st
 import random
 
-# 1. App Configuration & Styling
-st.set_page_config(page_title="MoodTune", page_icon="🎵")
+# 1. App Configuration
+st.set_page_config(page_title="Global MoodTune", page_icon="🎵")
 
 st.markdown("""
     <style>
-    .main {
-        background-color: #121212;
-        color: white;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 20px;
-        background-color: #1DB954;
-        color: white;
-    }
+    .main { background-color: #121212; color: white; }
+    .stButton>button { width: 100%; border-radius: 20px; background-color: #1DB954; color: white; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. Local Music Database (No API needed)
-mood_data = {
-    "Happy": {
-        "songs": ["Walking on Sunshine - Katrina & The Waves", "Happy - Pharrell Williams", "Don't Stop Me Now - Queen"],
-        "emoji": "😊",
-        "color": "#FFD700"
+# 2. Expanded Multi-Language Database
+music_db = {
+    "English": {
+        "Happy": ["Walking on Sunshine - Katrina & The Waves", "Happy - Pharrell Williams"],
+        "Sad": ["Someone Like You - Adele", "Fix You - Coldplay"],
+        "Energetic": ["Power - Kanye West", "Eye of the Tiger - Survivor"],
+        "Relaxed": ["Sunflower - Post Malone", "Weightless - Marconi Union"]
     },
-    "Sad": {
-        "songs": ["Someone Like You - Adele", "Fix You - Coldplay", "Yesterday - The Beatles"],
-        "emoji": "😢",
-        "color": "#1E90FF"
+    "Telugu": {
+        "Happy": ["Butta Bomma (AVPL)", "Chilipiga (Orange)", "Super Machi (S/O Satyamurthy)"],
+        "Sad": ["Oosupodu (Fidaa)", "Thalachi Thalachi (7G Brindavan Colony)"],
+        "Energetic": ["Top Lesi Poddi (Iddarammayilatho)", "Ramulo Ramula (AVPL)"],
+        "Relaxed": ["Samayama (Hi Nanna)", "Gundelonaa (Ori Devuda)"]
     },
-    "Energetic": {
-        "songs": ["Power - Kanye West", "Eye of the Tiger - Survivor", "Can't Stop - RHCP"],
-        "emoji": "⚡",
-        "color": "#FF4500"
+    "Hindi": {
+        "Happy": ["Balam Pichkari (YJHD)", "London Thumakda (Queen)"],
+        "Sad": ["Agar Tum Saath Ho (Tamasha)", "Channa Mereya (ADHM)"],
+        "Energetic": ["Mauja Hi Mauja (Jab We Met)", "Kar Gayi Chull"],
+        "Relaxed": ["Tum Se Hi (Jab We Met)", "Iktara (Wake Up Sid)"]
     },
-    "Relaxed": {
-        "songs": ["Weightless - Marconi Union", "Sunflower - Post Malone", "Morning - Edvard Grieg"],
-        "emoji": "🧘",
-        "color": "#98FB98"
+    "Tamil": {
+        "Happy": ["Arabic Kuthu (Beast)", "Aaluma Doluma (Vedalam)"],
+        "Sad": ["Poo Nee Poo (3)", "Kanave Kanave (David)"],
+        "Energetic": ["Vaathi Coming (Master)", "Rakita Rakita (Jagame Thandhiram)"],
+        "Relaxed": ["Munbe Vaa (Sillunu Oru Kaadhal)", "Vaseegara (Minnale)"]
     }
 }
 
 # 3. App UI
-st.title("🎵 MoodTune")
-st.subheader("Your manual emotion-based music curator.")
+st.title("🎵 Global MoodTune")
+st.subheader("Select your language and mood for a recommendation.")
 
-st.write("How are you feeling right now?")
+# Language Selection
+selected_lang = st.selectbox("Choose your Preferred Language:", list(music_db.keys()))
 
-# Create a layout with columns for buttons
-cols = st.columns(len(mood_data))
+st.write(f"How is your mood in {selected_lang}?")
 
+# 4. Logic & Display
+moods = ["Happy", "Sad", "Energetic", "Relaxed"]
+cols = st.columns(4)
 selected_mood = None
 
-for i, (mood, details) in enumerate(mood_data.items()):
-    if cols[i].button(f"{details['emoji']}\n{mood}"):
+for i, mood in enumerate(moods):
+    if cols[i].button(mood):
         selected_mood = mood
 
-# 4. Recommendation Logic
 if selected_mood:
     st.divider()
-    song = random.choice(mood_data[selected_mood]["songs"])
+    # Pulling from the nested dictionary based on Lang -> Mood
+    songs = music_db[selected_lang][selected_mood]
+    recommendation = random.choice(songs)
     
-    st.markdown(f"### You're feeling <span style='color:{mood_data[selected_mood]['color']}'>{selected_mood}</span>", unsafe_allow_html=True)
-    st.success(f"**Recommended Track:** {song}")
-    
-    # Adding a fun tip
-    st.info("💡 Tip: Search for this song on your favorite music player!")
+    st.markdown(f"### Current Mood: **{selected_mood}**")
+    st.success(f"**Recommended {selected_lang} Track:** \n\n {recommendation}")
+    st.info(f"Go play this on Spotify or YouTube!")
 else:
-    st.info("Click a mood above to get a recommendation.")
+    st.info("Pick a mood to see the magic.")
