@@ -1,55 +1,57 @@
 import streamlit as st
 from textblob import TextBlob
+import nltk
 
-# --- Page Configuration ---
-st.set_page_config(
-    page_title="VibeCheck | Emotion Recommender",
-    page_icon="🎭",
-    layout="centered"
-)
+# --- Force Download of NLTK Data (Required for Deployment) ---
+@st.cache_resource
+def download_nltk_data():
+    try:
+        nltk.download('punkt_tab')
+        nltk.download('brown')
+    except Exception as e:
+        st.error(f"Error downloading data: {e}")
 
-# --- Data Store ---
-def get_recommendation(mood):
-    data = {
-        "Happy": {
-            "quote": "Happiness is not by chance, but by choice.",
-            "song": "Can't Stop the Feeling! - Justin Timberlake",
-            "color": "#FFD700"
-        },
-        "Sad": {
-            "quote": "Even the darkest night will end and the sun will rise.",
-            "song": "Fix You - Coldplay",
-            "color": "#4682B4"
-        },
-        "Neutral": {
-            "quote": "Life is a balance of holding on and letting go.",
-            "song": "Weightless - Marconi Union",
-            "color": "#808080"
-        }
+download_nltk_data()
+
+# --- Page Config ---
+st.set_page_config(page_title="VibeCheck AI", page_icon="🎵")
+
+# --- Recommendation Logic ---
+recs = {
+    "Happy": {
+        "quote": "Most folks are as happy as they make up their minds to be. – Abraham Lincoln",
+        "song": "Walking on Sunshine - Katrina & The Waves"
+    },
+    "Sad": {
+        "quote": "The way I see it, if you want the rainbow, you gotta put up with the rain. – Dolly Parton",
+        "song": "Fix You - Coldplay"
+    },
+    "Neutral": {
+        "quote": "Peace comes from within. Do not seek it without. – Buddha",
+        "song": "Weightless - Marconi Union"
     }
-    return data.get(mood)
+}
 
-# --- UI Layout ---
-st.title("🎭 VibeCheck AI")
-st.markdown("### Share your thoughts, and I'll match your energy.")
+# --- UI Design ---
+st.title("🎵 Emotion-Based Recommender")
+st.write("Type a sentence below, and I'll suggest a song and a quote based on your mood.")
 
-user_input = st.text_area("What's on your mind?", placeholder="I'm feeling really motivated today because...", height=150)
+user_input = st.text_input("How are you feeling?", placeholder="It's been a long but productive day...")
 
-if st.button("Analyze Vibe"):
+if st.button("Analyze My Vibe"):
     if user_input.strip():
         # Sentiment Analysis
         analysis = TextBlob(user_input)
         polarity = analysis.sentiment.polarity
         
-        # Categorize Mood
+        # Determine Category
         if polarity > 0.1:
             mood = "Happy"
+            st.balloons()
         elif polarity < -0.1:
             mood = "Sad"
         else:
             mood = "Neutral"
-        
-        res = get_recommendation(mood)
         
         # Display Results
         st.divider()
@@ -57,15 +59,11 @@ if st.button("Analyze Vibe"):
         
         col1, col2 = st.columns(2)
         with col1:
-            st.info(f"✨ **Daily Quote**\n\n*{res['quote']}*")
+            st.info(f"✨ **Quote**\n\n{recs[mood]['quote']}")
         with col2:
-            st.success(f"🎶 **Song Suggestion**\n\n{res['song']}")
-            
-        if mood == "Happy":
-            st.balloons()
+            st.success(f"🎶 **Song**\n\n{recs[mood]['song']}")
     else:
-        st.warning("Please type something before analyzing!")
+        st.warning("Please enter some text first!")
 
-# --- Sidebar ---
-st.sidebar.markdown("---")
-st.sidebar.write("Built with ❤️ using Streamlit & TextBlob")
+st.markdown("---")
+st.caption("Powered by Streamlit & TextBlob NLP")
