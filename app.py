@@ -1,100 +1,72 @@
 import streamlit as st
-from transformers import pipeline
 import random
 
-# 1. Page Configuration
-st.set_page_config(page_title="VibeTune AI", page_icon="🎧", layout="centered")
+# 1. App Configuration & Styling
+st.set_page_config(page_title="MoodTune", page_icon="🎵")
 
-# 2. Load Model (Cached so it only loads once)
-@st.cache_resource
-def load_classifier():
-    # Uses a specialized DistilRoBERTa model for 7-way emotion classification
-    return pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base")
+st.markdown("""
+    <style>
+    .main {
+        background-color: #121212;
+        color: white;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 20px;
+        background-color: #1DB954;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-classifier = load_classifier()
-
-# 3. Emotion-to-Music Mapping
-MOOD_PLAYLISTS = {
-    "joy": [
-        "Walking on Sunshine - Katrina & The Waves",
-        "Happy - Pharrell Williams",
-        "Levitating - Dua Lipa",
-        "Don't Stop Me Now - Queen"
-    ],
-    "sadness": [
-        "Someone Like You - Adele",
-        "Fix You - Coldplay",
-        "The Night We Met - Lord Huron",
-        "Yesterday - The Beatles"
-    ],
-    "anger": [
-        "Killing In The Name - Rage Against The Machine",
-        "In the End - Linkin Park",
-        "Break Stuff - Limp Bizkit",
-        "Thunderstruck - AC/DC"
-    ],
-    "fear": [
-        "Bury a Friend - Billie Eilish",
-        "Thriller - Michael Jackson",
-        "Disturbia - Rihanna",
-        "Somebody's Watching Me - Rockwell"
-    ],
-    "surprise": [
-        "Bohemian Rhapsody - Queen",
-        "Starman - David Bowie",
-        "Electric Feel - MGMT",
-        "Mr. Brightside - The Killers"
-    ],
-    "disgust": [
-        "Bad Guy - Billie Eilish",
-        "Uptown Funk - Bruno Mars",
-        "You're So Vain - Carly Simon"
-    ],
-    "neutral": [
-        "Weightless - Marconi Union",
-        "Lofi Hip Hop - Chillhop Music",
-        "Spiritual State - Nujabes",
-        "Gymnopédie No. 1 - Erik Satie"
-    ]
+# 2. Local Music Database (No API needed)
+mood_data = {
+    "Happy": {
+        "songs": ["Walking on Sunshine - Katrina & The Waves", "Happy - Pharrell Williams", "Don't Stop Me Now - Queen"],
+        "emoji": "😊",
+        "color": "#FFD700"
+    },
+    "Sad": {
+        "songs": ["Someone Like You - Adele", "Fix You - Coldplay", "Yesterday - The Beatles"],
+        "emoji": "😢",
+        "color": "#1E90FF"
+    },
+    "Energetic": {
+        "songs": ["Power - Kanye West", "Eye of the Tiger - Survivor", "Can't Stop - RHCP"],
+        "emoji": "⚡",
+        "color": "#FF4500"
+    },
+    "Relaxed": {
+        "songs": ["Weightless - Marconi Union", "Sunflower - Post Malone", "Morning - Edvard Grieg"],
+        "emoji": "🧘",
+        "color": "#98FB98"
+    }
 }
 
-# 4. App UI
-st.title("🎧 VibeTune AI")
-st.write("Type a sentence about your day, and I'll match the emotion to a song.")
-st.divider()
+# 3. App UI
+st.title("🎵 MoodTune")
+st.subheader("Your manual emotion-based music curator.")
 
-# User Input
-user_input = st.text_area("How are you feeling?", placeholder="e.g., I'm so excited for the weekend!")
+st.write("How are you feeling right now?")
 
-# Execution Logic
-if st.button("Analyze Mood & Suggest Song"):
-    if user_input.strip():
-        with st.spinner("Analyzing your vibes..."):
-            # Model Inference
-            results = classifier(user_input)
-            label = results[0]['label']
-            score = results[0]['score']
+# Create a layout with columns for buttons
+cols = st.columns(len(mood_data))
 
-            # Selection
-            song_choice = random.choice(MOOD_PLAYLISTS.get(label, MOOD_PLAYLISTS["neutral"]))
+selected_mood = None
 
-            # Results Display
-            st.subheader(f"Detected Emotion: **{label.title()}**")
-            st.write(f"Confidence Level: {round(score * 100, 2)}%")
-            st.progress(float(score))
-            
-            st.success(f"🎵 **Recommended Track:** {song_choice}")
+for i, (mood, details) in enumerate(mood_data.items()):
+    if cols[i].button(f"{details['emoji']}\n{mood}"):
+        selected_mood = mood
 
-            # Visual effects for specific moods
-            if label == "joy":
-                st.balloons()
-            elif label == "anger":
-                st.error("Let it all out. Here's a heavy track for you.")
-            elif label == "sadness":
-                st.info("It's okay to feel this way. Let the music help.")
-    else:
-        st.warning("Please enter some text so I can analyze it!")
-
-# Footer
-st.sidebar.markdown("### How it works")
-st.sidebar.write("This app uses a **Transformer-based Deep Learning model** to detect 7 specific emotions in text. Unlike basic sentiment analysis, it understands context and nuance.")
+# 4. Recommendation Logic
+if selected_mood:
+    st.divider()
+    song = random.choice(mood_data[selected_mood]["songs"])
+    
+    st.markdown(f"### You're feeling <span style='color:{mood_data[selected_mood]['color']}'>{selected_mood}</span>", unsafe_allow_html=True)
+    st.success(f"**Recommended Track:** {song}")
+    
+    # Adding a fun tip
+    st.info("💡 Tip: Search for this song on your favorite music player!")
+else:
+    st.info("Click a mood above to get a recommendation.")
